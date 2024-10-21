@@ -1,7 +1,8 @@
-# The LLM Language Network: A Neuroscientific Approach for Identifying Causally Important Units
+<h1 style="border-bottom: 0; padding-bottom: 0;"> The LLM Language Network </h1>
+<h2 style="padding-top: 0;"> A Neuroscientific Approach for Identifying Causally Important Units </h2>
 **Authors**: Badr AlKhamissi, Greta Tuckute, Antoine Bosselut*, Martin Schrimpf*
 <br>
-<small>\* Equal Supervision</small>
+<small>* Equal Supervision</small>
 
 **Paper Link**: TBD
 
