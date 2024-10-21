@@ -1,10 +1,15 @@
 # The LLM Language Network: A Neuroscientific Approach for Identifying Causally Important Units
 **Authors**: Badr AlKhamissi, Greta Tuckute, Antoine Bosselut*, Martin Schrimpf*
-> \* Equal Supervision
+<br>
+<small>\* Equal Supervision</small>
+
+**Paper Link**: TBD
 
 <div style='text-align: center'>
 <img src='assets/language-localization.png'></img>
 </div>
+
+> To identify language-selective units, we compare activations in response to sentences versus non-words, and isolate the units that exhibit the strongest sentence selectivity. The same method is used in neuroscience to localize the human brain's language network.
 
 ## Usage
 TBD
