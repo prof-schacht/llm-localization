@@ -12,9 +12,108 @@
 
 > To identify language-selective units, we compare activations in response to sentences versus non-words, and isolate the units that exhibit the strongest sentence selectivity. The same method is used in neuroscience to localize the human brain's language network.
 
-## Usage
-TBD
+## Repository Structure
 
+Here’s a well-structured **Repository Structure** section for your ReadMe:
+
+---
+
+### Repository Structure
+
+#### Root Directory
+- **`localize.py`**:  
+  The main script for localizing selective units within a specified model.
+  
+- **`datasets.py`**:  
+  Handles localizer stimuli loading and processing.
+
+- **`utils.py`**:  
+  Contains utility functions used throughout the repository.
+
+- **`model_utils.py`**:  
+  Provides model-related utilities.
+
+- **`generate_lesion.py`**:  
+  Generates text after applying lesions (ablations) to the localized units.
+
+#### Folders
+
+- **`stimuli/`**:  
+  Contains the localizer stimuli required for identifying selective units. These files are downloaded via the `scripts/download.sh` script.
+
+- **`scripts/`**:  
+  Contains bash scripts, including `download.sh`, which is used to download the localizer stimuli into the `stimuli` folder.
+
+- **`cache/`**:  
+  Stores the localized units' masks, which can be reused or overwritten based on the script options.
+
+## Arguments Description
+
+- `--model-name` (`str`, **required**):  
+  Specifies the HuggingFace model name that will be localized. This is a required argument.  
+  **Example**: `--model-name meta-llama/Llama-3.2-1B`
+
+- `--percentage` (`float`, *optional*):  
+  Defines the percentage of units to localize.  
+  **Example**: `--percentage 1` (localizes 1% of the units)
+
+- `--localize-range` (`str`, *optional*, default: `"100-100"`):  
+  Determines the percentile range of units to localize.  
+  - `"100-100"`: Localizes the top-selective units (most selective).  
+  - `"0-0"`: Localizes the least-selective units.  
+  - `"x-y"`: Localize random units within that percentile range where `y > x`
+  **Example**: `--localize-range 80-90`
+
+- `--network` (`str`, *optional*, default: `"language"`, choices: `["language", "theory-of-mind", "multiple-demand]`):  
+  Specifies the network type to localize.  
+  **Example**: `--network language`
+
+- `--pooling` (`str`, *optional*, default: `"last-token"`, choices: `["last-token", "mean"]`):  
+  Defines the method for token aggregation when localizing units:  
+  - `"last-token"`: Uses the last token of the sequence.  
+  - `"mean"`: Averages over all tokens in the sequence.  
+  **Example**: `--pooling mean`
+
+- `--num-units` (`int`, *optional*):  
+  Specifies the exact number of units to localize. If `--percentage` is provided, it overrides this argument.  
+  **Example**: `--num-units 1024`
+
+- `--seed` (`int`, *optional*, default: `42`):  
+  Sets the random seed for reproducibility of results.  
+  **Example**: `--seed 123`
+
+- `--device` (`str`, *optional*):  
+  Specifies the device to use (e.g., `"cpu"`, `"cuda:0"`). If not provided, the device will be automatically selected.  
+  **Example**: `--device cuda:0`
+
+- `--untrained` (`flag`, *optional*):  
+  Use this flag to localize units on an untrained version of the model. No arguments needed for this flag.  
+  **Example**: `--untrained` (applies to untrained models)
+
+- `--overwrite` (`flag`, *optional*):  
+  Use this flag to overwrite an existing mask if a cached version is found.  
+  **Example**: `--overwrite`
+
+## Usage Instructions
+
+1. **Download Language Localizer Stimuli:**
+   Run the following command to download the required language stimuli:
+   ```bash
+   bash scripts/download.sh
+   ```
+   The files will be saved in the `stimuli/language` directory.
+
+2. **Run the Localization Script:**
+   Use the following command to localize the top language-selective units for your chosen model:
+   ```bash
+   python localize.py 
+        --model-name <model_name> 
+        --percentage <percentage>
+        --network language 
+        --localize-range 100-100 
+        --pooling last-token
+   ```
+   This will create a mask in the `cache` directory, which can be used to ablate or extract the identified language-selective units.
 
 ## Abstract
 
