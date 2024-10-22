@@ -14,13 +14,7 @@
 <img src='assets/language-localization.png'></img>
 </div>
 
-> To identify language-selective units, we compare activations in response to sentences versus non-words, and isolate the units that exhibit the strongest sentence selectivity. The same method is used in neuroscience to localize the human brain's language network.
-
-## Repository Structure
-
-Here’s a well-structured **Repository Structure** section for your ReadMe:
-
----
+To identify language-selective units, we compare activations in response to sentences versus non-words, and isolate the units that exhibit the strongest sentence selectivity. The same method is used in neuroscience to localize the human brain's language network.
 
 ### Repository Structure
 
