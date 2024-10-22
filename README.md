@@ -10,7 +10,7 @@
 <p> * Equal Supervision </p>
 
 
-<div style='text-align: center'>
+<div align='center'>
 <img style="width: 75%" src='assets/language-localization.png'></img>
 </div>
 
