@@ -11,10 +11,10 @@
 
 
 <div style='text-align: center'>
-<img src='assets/language-localization.png'></img>
+<img style="width: 75%" src='assets/language-localization.png'></img>
 </div>
 
-To identify language-selective units, we compare activations in response to sentences versus non-words, and isolate the units that exhibit the strongest sentence selectivity. The same method is used in neuroscience to localize the human brain's language network.
+> To identify language-selective units, we compare activations in response to sentences versus non-words, and isolate the units that exhibit the strongest sentence selectivity. The same method is used in neuroscience to localize the human brain's language network.
 
 ### Repository Structure
 
@@ -59,7 +59,8 @@ To identify language-selective units, we compare activations in response to sent
   Determines the percentile range of units to localize.  
   - `"100-100"`: Localizes the top-selective units (most selective).  
   - `"0-0"`: Localizes the least-selective units.  
-  - `"x-y"`: Localize random units within that percentile range where `y > x`
+  - `"x-y"`: Localize random units within that percentile range where `y > x`.
+
   **Example**: `--localize-range 80-90`
 
 - `--network` (`str`, *optional*, default: `"language"`, choices: `["language", "theory-of-mind", "multiple-demand]`):  
