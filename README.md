@@ -1,10 +1,14 @@
-<h1 style="border-bottom: 0; padding-bottom: 0;"> The LLM Language Network </h1>
-<h2 style="padding-top: 0;"> A Neuroscientific Approach for Identifying Causally Important Units </h2>
-**Authors**: Badr AlKhamissi, Greta Tuckute, Antoine Bosselut*, Martin Schrimpf*
-<br>
-<small>* Equal Supervision</small>
+<h1> 
+  The LLM Language Network 
+  <br>
+  A Neuroscientific Approach for Identifying Causally Important Units
+</h1>
 
 **Paper Link**: TBD
+
+**Authors**: Badr AlKhamissi, Greta Tuckute, Antoine Bosselut*, Martin Schrimpf*
+<p> * Equal Supervision </p>
+
 
 <div style='text-align: center'>
 <img src='assets/language-localization.png'></img>
