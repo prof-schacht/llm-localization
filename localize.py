@@ -1,7 +1,6 @@
 from typing import List, Dict
 
 import os
-import scipy
 import torch
 import argparse
 import numpy as np
@@ -9,6 +8,7 @@ import transformers
 
 from tqdm import tqdm
 from torch.utils.data import DataLoader
+from scipy.stats import ttest_ind, false_discovery_control
 
 from model_utils import get_layer_names, get_hidden_dim
 from utils import setup_hooks
@@ -146,7 +146,7 @@ def localize(model_id: str,
         positive_actv = np.abs(representations["positive"][layer_name])
         negative_actv = np.abs(representations["negative"][layer_name])
 
-        t_values_matrix[layer_idx], p_values_matrix[layer_idx] = scipy.stats.ttest_ind(positive_actv, negative_actv, axis=0, equal_var=False)
+        t_values_matrix[layer_idx], p_values_matrix[layer_idx] = ttest_ind(positive_actv, negative_actv, axis=0, equal_var=False)
  
     def is_topk(a, k=1):
         _, rix = np.unique(-a, return_inverse=True)
@@ -180,7 +180,7 @@ def localize(model_id: str,
 
     print(f"> Num units: {language_mask.sum()}")
     num_layers, num_units = p_values_matrix.shape
-    adjusted_p_values = scipy.stats.false_discovery_control(p_values_matrix.flatten())
+    adjusted_p_values = false_discovery_control(p_values_matrix.flatten())
     adjusted_p_values = adjusted_p_values.reshape((num_layers, num_units))
 
     np.save(save_path, language_mask)
@@ -238,7 +238,7 @@ if  __name__ == "__main__":
         network=network,
         pooling=pooling,
         model=model,
-        top_k=num_units,
+        num_units=num_units,
         percentage=percentage,
         tokenizer=tokenizer,
         hidden_dim=hidden_dim,

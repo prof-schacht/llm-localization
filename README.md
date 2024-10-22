@@ -16,6 +16,12 @@
 
 > To identify language-selective units, we compare activations in response to sentences versus non-words, and isolate the units that exhibit the strongest sentence selectivity. The same method is used in neuroscience to localize the human brain's language network.
 
+## Setup
+
+1. Create conda environment: `conda create -n llm-loc python=3.10`
+2. Activate environment: `conda activate llm-loc`
+3. Install packages: `pip install -r requirements.txt`
+
 ### Repository Structure
 
 #### Root Directory
@@ -113,6 +119,9 @@
         --pooling last-token
    ```
    This will create a mask in the `cache` directory, which can be used to ablate or extract the identified language-selective units.
+
+3. **Run the Generation with Ablation Script:**
+   See the example in `scripts/generate_lesion.sh`
 
 ## Abstract
 
