@@ -1,10 +1,10 @@
 <h1> 
   The LLM Language Network 
   <br>
-  A Neuroscientific Approach for Identifying Causally Important Units
+  A Neuroscientific Approach for Identifying Causally Task-Relevant Units
 </h1>
 
-**Paper Link**: TBD
+[![arXiv](https://img.shields.io/badge/arXiv-2411.02280-b31b1b.svg)](https://arxiv.org/abs/2411.02280)
 
 **Authors**: Badr AlKhamissi, Greta Tuckute, Antoine Bosselut*, Martin Schrimpf*
 <p> * Equal Supervision </p>
@@ -125,7 +125,17 @@
 
 ## Abstract
 
-Large language models (LLMs) exhibit remarkable capabilities on not just language tasks, but also various other tasks that are not linguistic in nature, such as logical reasoning and social inferences. In the human brain, neuroscience has identified a core language system that specifically supports language processing. We here ask whether similar specialization for language emerges in LLMs. We identify language-selective units within 5 popular LLMs, using the same localizer experiments that are used in neuroscience. To test the causal role of LLM language units, we systematically lesion the localized units which leads to dramatic performance deficits in language tasks, even with a small number of ablations. Lesioning random units leads to almost no difference in performance, establishing LLM language units as functionally meaningful. Correspondingly, language-selective units are more aligned to brain recordings than randomly selected units. Finally, we investigate whether our localization method applies to other cognitive domains: while we again find specialized networks in LLMs for reasoning and social capabilities, there are substantial differences among models. These findings provide functional and causal evidence for specialization in large language models, and highlight parallels with the functional organization in the brain.
+Large language models (LLMs) exhibit remarkable capabilities on not just language tasks, but also various tasks that are not linguistic in nature, such as logical reasoning and social inference. In the human brain, neuroscience has identified a core language system that selectively and causally supports language processing. We here ask whether similar specialization for language emerges in LLMs. We identify language-selective units within 18 popular LLMs, using the same localization approach that is used in neuroscience. We then establish the causal role of these units by demonstrating that ablating LLM language-selective units -- but not random units -- leads to drastic deficits in language tasks. Correspondingly, language-selective LLM units are more aligned to brain recordings from the human language system than random units. Finally, we investigate whether our localization method extends to other cognitive domains: while we find specialized networks in some LLMs for reasoning and social capabilities, there are substantial differences among models. These findings provide functional and causal evidence for specialization in large language models, and highlight parallels with the functional organization in the brain.
 
 ## Citation 
-TBD
+```
+@article{alkhamissi2024-llm-localization,
+      title={The LLM Language Network: A Neuroscientific Approach for Identifying Causally Task-Relevant Units}, 
+      author={Badr AlKhamissi and Greta Tuckute and Antoine Bosselut and Martin Schrimpf},
+      year={2024},
+      eprint={2411.02280},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2411.02280}, 
+}
+```
