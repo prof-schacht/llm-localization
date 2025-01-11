@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from glob import glob
 from torch.utils.data import Dataset
+import json
+
 
 from utils import read_story, read_question
 
@@ -93,3 +95,21 @@ class TOMLocDataset(Dataset):
     
     def __len__(self):
         return len(self.positive)
+
+
+class MoralFoundationDataset(Dataset):
+    def __init__(self, foundation='care'):
+        # Define the data structure
+        with open('stimuli/mft/mft.json', 'r') as f:
+            moral_data = json.load(f)
+        
+        # Split into positive and negative examples
+        self.positive = [pair[0] for pair in moral_data[foundation]]
+        self.negative = [pair[1] for pair in moral_data[foundation]]
+
+    def __getitem__(self, idx):
+        return self.positive[idx].strip(), self.negative[idx].strip()
+        
+    def __len__(self):
+        return len(self.positive)
+

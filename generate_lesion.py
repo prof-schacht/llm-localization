@@ -2,7 +2,13 @@ import os
 import torch
 import argparse
 import numpy as np
-from transformers import AutoTokenizer
+import warnings
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import logging
+
+# Suppress warnings
+warnings.filterwarnings("ignore")
+logging.set_verbosity_error()
 
 from models.modeling_gpt2 import GPT2LMHeadModel
 from models.modeling_llama import LlamaForCausalLM
@@ -19,7 +25,7 @@ if __name__ == "__main__":
     argparser.add_argument("--model-name", type=str, required=True)
     argparser.add_argument("--prompt", type=str, required=True)
     argparser.add_argument("--percentage", type=float, required=True)
-    argparser.add_argument("--network", type=str, default="language", choices=["language", "random", "none"])   
+    argparser.add_argument("--network", type=str, default="language", choices=["language", "moral", "random", "none"])   
     argparser.add_argument("--device", type=str, default=None)
     argparser.add_argument("--seed", type=int, default=42)
     argparser.add_argument("--pooling", type=str, default="last-token", choices=["last-token", "mean"])
@@ -36,35 +42,46 @@ if __name__ == "__main__":
     pooling = args.pooling
     loc_range = args.localize_range
 
+    print(f"--------------------------------------------------------")
     print(f"> Running with model {model_name}")
 
-    if "gpt2" in model_name:
-        model = GPT2LMHeadModel.from_pretrained(model_name)
-    elif "Llama" in model_name:
+    if "gpt2" in model_name.lower():
+        model = GPT2LMHeadModel.from_pretrained(model_name, trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, padding_side='left')
+        tokenizer.pad_token = tokenizer.eos_token
+    elif "llama" in model_name.lower():
         model = LlamaForCausalLM.from_pretrained(model_name)
-    elif "Phi" in model_name:
-        model = Phi3ForCausalLM.from_pretrained(model_name)
-    elif "gemma" in model_name:
+    elif "phi" in model_name.lower():
+        if "phi-3" in model_name.lower():
+            model = Phi3ForCausalLM.from_pretrained(model_name)
+        else:  # phi-4
+            model = Phi3ForCausalLM.from_pretrained(model_name, trust_remote_code=True)
+    elif "gemma" in model_name.lower():
         model = GemmaForCausalLM.from_pretrained(model_name)
-    elif "falcon" in model_name:
+    elif "falcon" in model_name.lower():
         model = FalconForCausalLM.from_pretrained(model_name)
-    elif "Mistral" in model_name:
+    elif "mistral" in model_name.lower():
         model = MistralForCausalLM.from_pretrained(model_name)
     else:
         raise ValueError(f"Model {model_name} not supported")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if "gpt2" not in model_name.lower():
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        tokenizer.pad_token = tokenizer.eos_token
 
     model.to(device)
     model.eval()
-    print(model)
+    
+    # Only print a simplified version of the model architecture
+    print(f"> Model loaded successfully with {sum(p.numel() for p in model.parameters())} parameters")
 
     model_name = os.path.basename(model_name)
 
     print(f"> Running with {network} mask")
 
-    if network in ["language", "random"]:
-        mask_path = f"{model_name}_network=language_pooling={pooling}_range={loc_range}_perc={percentage}_nunits=None_pretrained=True.npy"
+    if network in ["moral", "random"]:
+        # mask_path = f"{model_name}_network=language_pooling={pooling}_range={loc_range}_perc={percentage}_nunits=None_pretrained=True.npy"
+        mask_path = f"{model_name}_network=moral_pooling={pooling}_range={loc_range}_perc={percentage}_nunits=None_pretrained=True.npy"
     else:
         mask_path = None
 
@@ -85,7 +102,7 @@ if __name__ == "__main__":
 
 
         model.set_language_selective_mask(torch.tensor(language_mask).to(device))
-        print("Loaded language mask with", num_active_units, "units, with shape", language_mask.shape)
+        print("Loaded network mask with", num_active_units, "units, with shape", language_mask.shape)
     else:
         model.set_language_selective_mask(None)
 
@@ -93,7 +110,7 @@ if __name__ == "__main__":
 
     outputs = model.generate(
         **inputs,
-        max_length=20,
+        max_new_tokens=20,
         do_sample=True,
         temperature=0.7,
         num_return_sequences=1,

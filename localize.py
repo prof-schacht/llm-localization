@@ -5,6 +5,8 @@ import torch
 import argparse
 import numpy as np
 import transformers
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from tqdm import tqdm
 from torch.utils.data import DataLoader
@@ -12,7 +14,7 @@ from scipy.stats import ttest_ind, false_discovery_control
 
 from model_utils import get_layer_names, get_hidden_dim
 from utils import setup_hooks
-from datasets import LangLocDataset, TOMLocDataset, MDLocDataset
+from datasets import LangLocDataset, TOMLocDataset, MDLocDataset, MoralFoundationDataset
 
 # To cache the language mask
 CACHE_DIR = os.environ.get("LOC_CACHE", f"cache")
@@ -55,6 +57,7 @@ def extract_representations(
     hidden_dim: int,
     batch_size: int,
     device: torch.device,
+    foundation: str = None,
 ) -> Dict[str, Dict[str, np.array]]:
 
     if network == "language":
@@ -63,6 +66,8 @@ def extract_representations(
         loc_dataset = TOMLocDataset()
     elif network == "multiple-demand":
         loc_dataset = MDLocDataset()
+    elif network == "moral":
+        loc_dataset = MoralFoundationDataset(foundation=foundation)
     else:
         raise ValueError(f"Unsupported network: {network}")
 
@@ -98,6 +103,45 @@ def extract_representations(
 
     return final_layer_representations
 
+def plot_statistics(t_values_matrix, p_values_matrix, layer_names, foundation, model_id, percentage=1.0, save_dir="plots"):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    
+    # Calculate the t-value threshold for top 1%
+    num_units = int((percentage/100) * t_values_matrix.size)
+    t_threshold = np.sort(np.abs(t_values_matrix.flatten()))[-num_units]
+    
+    # Plot t-values distribution
+    sns.boxplot(data=[t_values_matrix[i] for i in range(len(layer_names))], ax=ax1)
+    ax1.set_xticklabels(layer_names, rotation=45)
+    ax1.set_title(f'T-values distribution across layers\n{foundation}')
+    ax1.set_ylabel('T-values')
+    # Add threshold lines for positive and negative t-values
+    ax1.axhline(y=t_threshold, color='r', linestyle='--', label=f'Top {percentage}% threshold')
+    ax1.axhline(y=-t_threshold, color='r', linestyle='--')
+    ax1.legend()
+    
+    # Plot -log10(p-values) distribution
+    log_p_values = -np.log10(p_values_matrix + 1e-300)
+    sns.boxplot(data=[log_p_values[i] for i in range(len(layer_names))], ax=ax2)
+    ax2.set_xticklabels(layer_names, rotation=45)
+    ax2.set_title(f'-log10(p-values) distribution across layers\n{foundation}')
+    ax2.set_ylabel('-log10(p-values)')
+    ax2.axhline(y=-np.log10(0.05), color='r', linestyle='--', label='p=0.05')
+    
+    # Add text with statistics
+    selected_p_values = p_values_matrix[np.abs(t_values_matrix) >= t_threshold]
+    significant_selected = (selected_p_values < 0.05).sum()
+    ax2.text(0.02, 0.98, 
+             f'Selected units: {num_units}\n'
+             f'Significant among selected: {significant_selected} ({significant_selected/len(selected_p_values)*100:.1f}%)',
+             transform=ax2.transAxes, verticalalignment='top')
+    ax2.legend()
+    
+    plt.tight_layout()
+    save_path = f"{save_dir}/statistics_{model_id}_foundation={foundation}.png"
+    plt.savefig(save_path)
+    plt.close()
+
 def localize(model_id: str,
     network: str,
     pooling: str,
@@ -113,6 +157,7 @@ def localize(model_id: str,
     localize_range: str = None,
     pretrained: bool = True,
     overwrite: bool = False,
+    foundation: str = None,
 ):
     """
     Localize network selective units in the model.
@@ -120,8 +165,8 @@ def localize(model_id: str,
 
     range_start, range_end = map(int, localize_range.split("-"))
 
-    save_path = f"{CACHE_DIR}/{model_id}_network={network}_pooling={pooling}_range={localize_range}_perc={percentage}_nunits={num_units}_pretrained={pretrained}.npy"
-    save_path_pvalues = f"{CACHE_DIR}/{model_id}_network={network}_pooling={pooling}_pretrained={pretrained}_pvalues.npy"
+    save_path = f"{CACHE_DIR}/{model_id}_network={network}_foundation={foundation}_pooling={pooling}_range={localize_range}_perc={percentage}_nunits={num_units}_pretrained={pretrained}.npy"
+    save_path_pvalues = f"{CACHE_DIR}/{model_id}_network={network}_foundation={foundation}_pooling={pooling}_pretrained={pretrained}_pvalues.npy"
 
     if os.path.exists(save_path) and not overwrite:
         print(f"> Loading mask from {save_path}")
@@ -136,18 +181,27 @@ def localize(model_id: str,
         hidden_dim=hidden_dim, 
         batch_size=batch_size, 
         device=device,
+        foundation=foundation,
     )
 
     p_values_matrix = np.zeros((len(layer_names), hidden_dim))
     t_values_matrix = np.zeros((len(layer_names), hidden_dim))
 
     for layer_idx, layer_name in tqdm(enumerate(layer_names), total=len(layer_names)):
-
         positive_actv = np.abs(representations["positive"][layer_name])
         negative_actv = np.abs(representations["negative"][layer_name])
-
         t_values_matrix[layer_idx], p_values_matrix[layer_idx] = ttest_ind(positive_actv, negative_actv, axis=0, equal_var=False)
- 
+
+        print(f"> Starting statistics plotting...")
+        plot_statistics(
+            t_values_matrix, 
+            p_values_matrix, 
+            layer_names, 
+            foundation,
+            model_id
+        )
+        print(f"> Finished statistics plotting")
+
     def is_topk(a, k=1):
         _, rix = np.unique(-a, return_inverse=True)
         return np.where(rix < k, 1, 0).reshape(a.shape)
@@ -186,6 +240,7 @@ def localize(model_id: str,
     np.save(save_path, language_mask)
     np.save(save_path_pvalues, adjusted_p_values)
     print(f"> {model_id} {network} mask cached to {save_path}")
+
     return language_mask
 
 if  __name__ == "__main__":
@@ -201,10 +256,12 @@ if  __name__ == "__main__":
     parser.add_argument("--device", type=str, default=None, help="device to use")
     parser.add_argument("--untrained", action="store_true", help="use an untrained version of the model")
     parser.add_argument("--overwrite", action="store_true", help="overwrite current mask if cached")
+    parser.add_argument("--foundation", type=str, default="care", 
+                       choices=["care", "fairness", "loyalty", "authority", "sanctity", "liberty"])
     args = parser.parse_args()
 
     assert args.percentage or args.num_units, "You must either provide percentage of units to localize or number of units"
-    assert args.network in {"language", "theory-of-mind", "multiple-demand"}, "Unsupported network"
+    assert args.network in {"language", "theory-of-mind", "multiple-demand", "moral"}, "Unsupported network"
 
     model_name = args.model_name
     pretrained = not args.untrained
@@ -249,4 +306,5 @@ if  __name__ == "__main__":
         localize_range=localize_range,
         pretrained=pretrained,
         overwrite=args.overwrite,
+        foundation=args.foundation,
     )
